@@ -1,113 +1,178 @@
+'use client'
+import AddNewComponent from "./components/AddNewComponent";
+import EmptyState from '../public/EmptyState.png'
 import Image from "next/image";
+import Linkitem from "./components/Linkitem";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState } from "./globalRedux/store";
+import { useEffect } from "react";
+import { getAuth } from "firebase/auth";
+import { app, db } from "./firebase.config";
+import { setLoggedIn } from "./globalRedux/features/auth/authSlice";
+import { addDoc, collection, doc, getDocs, query, updateDoc, where } from "firebase/firestore";
+import { setLinks, setWorkingLinks, setLoading } from "./globalRedux/features/link/linkSlice";
 
+
+
+const createLink = async(links:object[],workingLinks:object[])=>{
+  console.log("object");
+  const missing = links.filter(item => workingLinks.indexOf(item) < 0)
+
+  console.log(missing);
+
+  const linksWithID = missing.filter(item=> item.id)
+  const linksWithoutID = missing.filter(item=> !item.id)
+
+  if(linksWithID.length >=1 && linksWithoutID.length >=1){
+    await Promise.all([updateLink(linksWithID),createNewLink(linksWithoutID)])
+  }else if(linksWithID.length >=1){
+    await updateLink(linksWithID)
+  }else if(linksWithoutID.length >=1){
+    await createNewLink(linksWithoutID)
+  }
+
+  // await updateLink(linksWithID)
+
+  console.log("We are done");
+  // try {
+  //   links.forEach(async (link)=>{
+  //     await addDoc(collection(db,'links'),link)
+  //   })
+  // } catch (error) {
+  //   console.log(error);
+  // }
+  
+}
+
+const createNewLink = async (linksWithoutID:object[])=>{
+  linksWithoutID.forEach(async(link)=>{
+    await addDoc(collection(db,'links'),link)
+  })
+}
+
+const updateLink = async(linksWithID:object[])=>{
+
+  console.log("Code please");
+  linksWithID.forEach(async(link)=>{
+    const linkRef = doc(db,'links',link.id)
+
+    await updateDoc(linkRef,{
+      platform: link.platform,
+      url:link.url
+    })
+    console.log("Single link");
+  })
+
+  console.log("end of table");
+}
+
+const fetchLinks = async(id:string)=>{
+
+  const q = query(collection(db,'links'), where('userRef','==',id))
+
+  const listSnap = await getDocs(q)
+
+  let lists:object[] = []
+
+  listSnap.forEach((list)=>{
+    lists.push({
+      id:list.id,
+      url:list.data().url,
+      platform:list.data().platform,
+      userRef:list.data().userRef
+    })
+    console.log(list.data());
+  })
+
+  return lists
+
+
+}
 export default function Home() {
+  const {links, loading, workingLinks} = useSelector((state: RootState)=>state.link)
+  const {id} = useSelector((state:RootState)=>state.auth)
+
+  const dispatch = useDispatch()
+
+  useEffect(()=>{
+    const auth = getAuth(app)
+
+    if(id){
+      dispatch(setLoggedIn(true))
+    }
+
+    if(links.length <=0){
+      dispatch(setLoading(true))
+      fetchLinks(id).then((li)=>{
+        dispatch(setLinks(li))
+        dispatch(setWorkingLinks(li))
+        dispatch(setLoading(false))
+      })
+    }
+    if(links.length >=1){
+      dispatch(setLoading(false))
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[links])
+
+  if(loading){
+    return <p>
+      Loading.........
+    </p>
+  }
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 w-full max-w-5xl items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editing&nbsp;
-          <code className="font-mono font-bold">app/page.tsx</code>
-        </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:size-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{" "}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
+    <main className="p-4 lg:p-7 gap-4 flex ">
+      {/* Container*/}
+      <div className="hidden lg:block lg:w-[580px] bg-[#ffffff] rounded-xl min-h-screen"></div>
+      <div className="min-h-screen bg-[#ffffff] rounded-xl p-5 lg:w-[800px]">
+        {/* <div ></div> */}
+        <div className="">
+          <AddNewComponent/>
+
+          {
+            links.length <=0 &&
+            <div className="bg-[#FAFAFA] rounded-xl p-5 md:p-20 flex flex-col gap-6 mt-6">
+              <div className=" text-center flex flex-col gap-6 mt-6">
+                <Image src={EmptyState} alt="Empty" className="h-20 w-32 m-auto"/>
+
+                <h1 className="text-2xl font-bold text-[#333333]">
+                  Let’s get you started
+                </h1>
+
+                <p className="text-base font-normal text-[#737373]">
+                  Use the “Add new link” button to get started. Once you have more than one link, you can reorder and edit them. We’re here to help you share your profiles with everyone!
+                </p>
+
+                
+              </div>
+            </div>
+          }
+
+          <div className="flex flex-col mt-8 gap-5">
+            {
+              links?.map((link,index)=>(
+
+                <div className="" key={index}> 
+                    <Linkitem num={index+1} link={link}/>
+                </div>
+              ))
+            }
+          </div>
+          
+
+          <button className={`btn bg-[#633CFF] text-[#ffffff] w-full mt-5 ${links === workingLinks && 'btn-disabled'}`} onClick={()=>createLink(links,workingLinks)}>
+            Save
+          </button>
+
+          
         </div>
+
+        {/* <div className="mt-4"> 
+          <Linkitem/>
+        </div> */}
+
       </div>
-
-      <div className="relative z-[-1] flex place-items-center before:absolute before:h-[300px] before:w-full before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-full after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 sm:before:w-[480px] sm:after:w-[240px] before:lg:h-[360px]">
-        <Image
-          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
-
-      <div className="mb-32 grid text-center lg:mb-0 lg:w-full lg:max-w-5xl lg:grid-cols-4 lg:text-left">
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Docs{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Learn{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Templates{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Explore starter templates for Next.js.
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Deploy{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-balance text-sm opacity-50">
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
+      
     </main>
   );
 }
