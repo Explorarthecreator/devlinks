@@ -11,6 +11,7 @@ import { app, db } from "./firebase.config";
 import { setId, setLoggedIn } from "./globalRedux/features/auth/authSlice";
 import { addDoc, collection, doc, getDocs, query, updateDoc, where } from "firebase/firestore";
 import { setLinks, setWorkingLinks, setLoading } from "./globalRedux/features/link/linkSlice";
+import { useRouter } from "next/navigation";
 
 interface link {
   id:'',
@@ -98,6 +99,7 @@ export default function Home() {
   const {id} = useSelector((state:RootState)=>state.auth)
 
   const dispatch = useDispatch()
+  const route = useRouter()
 
   useEffect(()=>{
     const auth = getAuth(app)
@@ -105,6 +107,8 @@ export default function Home() {
     dispatch(setId(localId))
     if(localId){
       dispatch(setLoggedIn(true))
+    }else{
+      route.push('/login')
     }
 
     if(links.length <=0){
