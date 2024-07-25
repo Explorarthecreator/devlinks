@@ -3,7 +3,7 @@
 import { createSlice } from "@reduxjs/toolkit"
 
 // const id = JSON.parse(localStorage.getItem('id')|| 'null')
-const id = localStorage.getItem('id')
+// const id = localStorage.getItem('id')
 
 export interface Authstate{
     value:number,
@@ -15,7 +15,7 @@ const initialState:Authstate= {
     value:2,
     logged: false,
     loading:false,
-    id:id?id:''
+    id:''
 }
 
 export const authSlice= createSlice({

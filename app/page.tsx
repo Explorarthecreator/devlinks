@@ -8,7 +8,7 @@ import { RootState } from "./globalRedux/store";
 import { useEffect } from "react";
 import { getAuth } from "firebase/auth";
 import { app, db } from "./firebase.config";
-import { setLoggedIn } from "./globalRedux/features/auth/authSlice";
+import { setId, setLoggedIn } from "./globalRedux/features/auth/authSlice";
 import { addDoc, collection, doc, getDocs, query, updateDoc, where } from "firebase/firestore";
 import { setLinks, setWorkingLinks, setLoading } from "./globalRedux/features/link/linkSlice";
 
@@ -101,8 +101,9 @@ export default function Home() {
 
   useEffect(()=>{
     const auth = getAuth(app)
-
-    if(id){
+    const localId = localStorage.getItem('id')
+    dispatch(setId(localId))
+    if(localId){
       dispatch(setLoggedIn(true))
     }
 
