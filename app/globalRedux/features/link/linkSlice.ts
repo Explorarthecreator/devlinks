@@ -4,7 +4,7 @@ import { createSlice } from "@reduxjs/toolkit"
 
 export interface LinkState {
     links: link[],
-    workingLinks:object[],
+    workingLinks:link[],
     loading:boolean
 }
 interface link {

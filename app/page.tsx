@@ -12,11 +12,16 @@ import { setLoggedIn } from "./globalRedux/features/auth/authSlice";
 import { addDoc, collection, doc, getDocs, query, updateDoc, where } from "firebase/firestore";
 import { setLinks, setWorkingLinks, setLoading } from "./globalRedux/features/link/linkSlice";
 
+interface link {
+  id:'',
+  url:'',
+  userRef:''
+  platform:''
+}
 
-
-const createLink = async(links:object[],workingLinks:object[])=>{
+const createLink = async(links:link[],workingLinks:link[])=>{
   console.log("object");
-  const missing = links.filter(item => workingLinks.indexOf(item) < 0)
+  const missing:link[] = links.filter(item => workingLinks.indexOf(item) < 0)
 
   console.log(missing);
 
@@ -50,7 +55,7 @@ const createNewLink = async (linksWithoutID:object[])=>{
   })
 }
 
-const updateLink = async(linksWithID:object[])=>{
+const updateLink = async(linksWithID:link[])=>{
 
   console.log("Code please");
   linksWithID.forEach(async(link)=>{
