@@ -3,13 +3,20 @@
 import { createSlice } from "@reduxjs/toolkit"
 
 export interface LinkState {
-    links: object[],
+    links: link[],
     workingLinks:object[],
     loading:boolean
 }
-
+interface link {
+    id:'',
+    url:'',
+    userRef:''
+    platform:''
+}
 const initialState : LinkState={
-    links:[],
+    links:[
+        
+    ],
     workingLinks:[],
     loading:false
 }
@@ -33,7 +40,7 @@ export const linkSlice = createSlice({
         },
         updateUrl:(state,action)=>{
             // state.links[action.payload.index] = action.payload.url
-            state.links[action.payload.index].url = action.payload.ger
+            state.links[action.payload.index].url = action.payload.url
         }
     }
 })
