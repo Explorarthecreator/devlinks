@@ -25,6 +25,7 @@ export const linkSlice = createSlice({
     name:'link',
     initialState,
     reducers:{
+        reset:(state)=>initialState,
         increaseLink: (state,action)=>{
             state.links.push(action.payload)
             state.loading = true
@@ -40,11 +41,17 @@ export const linkSlice = createSlice({
         },
         updateUrl:(state,action)=>{
             // state.links[action.payload.index] = action.payload.url
-            state.links[action.payload.index].url = action.payload.url
+            state.links[action.payload.index].url = action.payload.ger
+        },
+        updatePlatform:(state,action)=>{
+            state.links[action.payload.index].platform = action.payload.plat
+        },
+        popLink:(state,action)=>{
+            state.links.splice(action.payload,1)
         }
     }
 })
 
-export const {setLoading, increaseLink, setLinks, setWorkingLinks,updateUrl} = linkSlice.actions
+export const {reset, setLoading, increaseLink, setLinks, setWorkingLinks,updateUrl,updatePlatform, popLink} = linkSlice.actions
 
 export default linkSlice.reducer

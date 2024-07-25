@@ -76,6 +76,7 @@ const fetchLinks = async(id:string)=>{
 
   const q = query(collection(db,'links'), where('userRef','==',id))
 
+  console.log(id);
   const listSnap = await getDocs(q)
 
   let lists:object[] = []
@@ -104,24 +105,32 @@ export default function Home() {
   useEffect(()=>{
     const auth = getAuth(app)
     const localId = localStorage.getItem('id')
-    dispatch(setId(localId))
-    if(localId){
+    if(localId !== null){
+      dispatch(setId(localId))
+    }
+    
+    if(localId !== 'null'){
+      console.log(typeof localId);
       dispatch(setLoggedIn(true))
-    }else{
-      route.push('/login')
-    }
 
-    if(links.length <=0){
-      dispatch(setLoading(true))
-      fetchLinks(id).then((li)=>{
-        dispatch(setLinks(li))
-        dispatch(setWorkingLinks(li))
+
+      if(links.length <=0){
+        dispatch(setLoading(true))
+        fetchLinks(localId).then((li)=>{
+          dispatch(setLinks(li))
+          dispatch(setWorkingLinks(li))
+          dispatch(setLoading(false))
+        })
+      }
+      if(links.length >=1){
         dispatch(setLoading(false))
-      })
+      }
     }
-    if(links.length >=1){
-      dispatch(setLoading(false))
-    }
+    // else{
+    //   route.push('/login')
+    // }
+
+    
   // eslint-disable-next-line react-hooks/exhaustive-deps
   },[links])
 
@@ -163,7 +172,7 @@ export default function Home() {
               links?.map((link,index)=>(
 
                 <div className="" key={index}> 
-                    <Linkitem num={index+1} link={link}/>
+                    <Linkitem num={index+1} link={link} />
                 </div>
               ))
             }
