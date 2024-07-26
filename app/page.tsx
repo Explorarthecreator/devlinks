@@ -72,7 +72,7 @@ const updateLink = async(linksWithID:link[])=>{
   console.log("end of table");
 }
 
-const fetchLinks = async(id:string)=>{
+const fetchLinks = async(id:string|null)=>{
 
   const q = query(collection(db,'links'), where('userRef','==',id))
 
@@ -105,12 +105,12 @@ export default function Home() {
   useEffect(()=>{
     const auth = getAuth(app)
     const localId = localStorage.getItem('id')
-    if(localId !== null){
+    if(localId !== 'null'){
       dispatch(setId(localId))
     }
-    
+
     if(localId !== 'null'){
-      console.log(typeof localId);
+      // console.log(typeof localId);
       dispatch(setLoggedIn(true))
 
 
